@@ -21,6 +21,15 @@ def _scan_json_any(file_path: Path):
         return pl.read_json(file_path).lazy()
     return pl.scan_ndjson(file_path)
 
+def _extract_pdf_text(file_path: Path):
+    import pymupdf
+    doc = pymupdf.open(file_path)
+    try:
+        text = "\n".join(page.get_text() for page in doc)
+    finally:
+        doc.close()
+    return pl.DataFrame({"id": [file_path.stem], "text": [text]}).lazy()
+
 def process_file(task):
     file_path_str = task["file"]
     output_file = task["output_file"]
@@ -41,6 +50,8 @@ def process_file(task):
             lf = _scan_json_any(file)
         elif ext == ".csv":
             lf = pl.scan_csv(file, ignore_errors=True, truncate_ragged_lines=True)
+        elif ext == ".pdf":
+            lf = _extract_pdf_text(file)
         else:
             raise ValueError(f"Unsupported file format: {ext}")
 

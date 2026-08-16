@@ -42,7 +42,7 @@ class RedirectText:
 # ==========================================
 def find_local_datasets(
     search_paths: List[str],
-    extensions: List[str] = [".parquet", ".csv", ".json", ".jsonl"],
+    extensions: List[str] = [".parquet", ".csv", ".json", ".jsonl", ".pdf"],
     recursive: bool = True
 ) -> List[Path]:
     found_files = set()
@@ -108,6 +108,16 @@ def _scan_json_any(file_path: Path):
         return pl.read_json(file_path).lazy()
     return pl.scan_ndjson(file_path)
 
+def _extract_pdf_text(file_path: Path):
+    import pymupdf
+    import polars as pl
+    doc = pymupdf.open(file_path)
+    try:
+        text = "\n".join(page.get_text() for page in doc)
+    finally:
+        doc.close()
+    return pl.DataFrame({"id": [file_path.stem], "text": [text]}).lazy()
+
 def process_single_file(file_path: Path, output_file: str, dedup_columns: List[str], column_mapping: Optional[Dict[str, str]], compression: str):
     import polars as pl
     from filelock import FileLock
@@ -122,6 +132,8 @@ def process_single_file(file_path: Path, output_file: str, dedup_columns: List[s
             lf = _scan_json_any(file_path)
         elif ext == ".csv":
             lf = pl.scan_csv(file_path, ignore_errors=True, truncate_ragged_lines=True)
+        elif ext == ".pdf":
+            lf = _extract_pdf_text(file_path)
         else:
             return f"Skipped unsupported file: {file_path}"
             
@@ -213,14 +225,16 @@ class DatasetCompilerApp(ctk.CTk):
 
         # Output File
         ctk.CTkLabel(self.tab1, text="Output Parquet File:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
-        self.output_var = tk.StringVar(value=os.path.abspath("consolidated_output/train_data.parquet"))
+        default_storage = Path.home() / "DatasetCompiler"
+        self.output_var = tk.StringVar(value=str(default_storage / "consolidated_output" / "train_data.parquet"))
         ctk.CTkEntry(self.tab1, textvariable=self.output_var).grid(row=4, column=1, padx=10, pady=5, sticky="ew")
         ctk.CTkButton(self.tab1, text="Browse", command=self.browse_output).grid(row=4, column=2, padx=10, pady=5)
 
         # Temp Download Dir
         ctk.CTkLabel(self.tab1, text="Temp Download Dir:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
-        self.temp_dir_var = tk.StringVar(value=os.path.abspath("raw_data"))
+        self.temp_dir_var = tk.StringVar(value=str(default_storage / "raw_data"))
         ctk.CTkEntry(self.tab1, textvariable=self.temp_dir_var).grid(row=5, column=1, padx=10, pady=5, sticky="ew")
+        ctk.CTkButton(self.tab1, text="Change Storage Folder", command=self.change_storage_dir).grid(row=5, column=2, padx=10, pady=5)
 
         # API Headers
         ctk.CTkLabel(self.tab1, text="API Headers (JSON):").grid(row=6, column=0, padx=10, pady=5, sticky="nw")
@@ -267,32 +281,55 @@ class DatasetCompilerApp(ctk.CTk):
         threading.Thread(target=self.monitor_hardware, daemon=True).start()
         
         self.after(100, self.process_log_queue)
-        
+
         # Auto-load previous configuration
         self.load_last_run()
+        if not self.storage_dir_configured:
+            self.change_storage_dir()
 
     def get_config_path(self):
         return Path.home() / ".dataset_compiler_config.json"
 
+    def prompt_storage_dir(self):
+        chosen = filedialog.askdirectory(
+            title="Choose a folder to store compiled datasets and downloaded files"
+        )
+        if not chosen:
+            chosen = str(Path.home() / "DatasetCompiler")
+        storage_dir = Path(chosen).expanduser().resolve()
+        storage_dir.mkdir(parents=True, exist_ok=True)
+        return storage_dir
+
+    def change_storage_dir(self):
+        storage_dir = self.prompt_storage_dir()
+        self.output_var.set(str(storage_dir / "consolidated_output" / "train_data.parquet"))
+        self.temp_dir_var.set(str(storage_dir / "raw_data"))
+        self.storage_dir_configured = True
+        self.save_last_run()
+
     def load_last_run(self):
         config_path = self.get_config_path()
+        self.storage_dir_configured = False
         if config_path.exists():
             try:
                 with open(config_path, "r") as f:
                     config = json.load(f)
                 self.urls_text.delete("1.0", "end")
                 self.urls_text.insert("1.0", config.get("urls", "https://example.com/data_part1.jsonl\nhttps://example.com/data_part2.csv"))
-                
+
                 self.local_paths_text.delete("1.0", "end")
                 self.local_paths_text.insert("1.0", config.get("local_paths", ""))
-                
+
                 self.col_map_text.delete("1.0", "end")
                 self.col_map_text.insert("1.0", config.get("col_map", "{\n    \"raw_text\": \"text\",\n    \"content\": \"text\",\n    \"document_id\": \"id\",\n    \"guid\": \"id\"\n}"))
-                
+
                 self.dedup_var.set(config.get("dedup_cols", "text"))
-                self.output_var.set(config.get("output_file", os.path.abspath("consolidated_output/train_data.parquet")))
-                self.temp_dir_var.set(config.get("temp_dir", os.path.abspath("raw_data")))
-                
+
+                if "storage_dir" in config:
+                    self.output_var.set(config.get("output_file", self.output_var.get()))
+                    self.temp_dir_var.set(config.get("temp_dir", self.temp_dir_var.get()))
+                    self.storage_dir_configured = True
+
                 self.api_headers_text.delete("1.0", "end")
                 self.api_headers_text.insert("1.0", config.get("api_headers", "{\n    \"Authorization\": \"Bearer hf_YOUR_TOKEN\"\n}"))
             except Exception as e:
@@ -306,6 +343,7 @@ class DatasetCompilerApp(ctk.CTk):
             "dedup_cols": self.dedup_var.get(),
             "output_file": self.output_var.get(),
             "temp_dir": self.temp_dir_var.get(),
+            "storage_dir": True,
             "api_headers": self.api_headers_text.get("1.0", "end-1c")
         }
         try:
@@ -316,7 +354,7 @@ class DatasetCompilerApp(ctk.CTk):
 
     def monitor_hardware(self):
         wmi_conn = None
-        if not HAS_NVML:
+        if not HAS_NVML and sys.platform == "win32":
             try:
                 import wmi
                 wmi_conn = wmi.WMI()
@@ -375,7 +413,7 @@ class DatasetCompilerApp(ctk.CTk):
                 self.local_paths_text.insert("end", folder)
 
     def add_local_file(self):
-        files = filedialog.askopenfilenames(filetypes=[("Dataset Files", "*.csv *.parquet *.json *.jsonl"), ("All Files", "*.*")])
+        files = filedialog.askopenfilenames(filetypes=[("Dataset Files", "*.csv *.parquet *.json *.jsonl *.pdf"), ("All Files", "*.*")])
         if files:
             for file in files:
                 current = self.local_paths_text.get("1.0", "end-1c")

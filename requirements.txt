@@ -9,4 +9,5 @@ requests
 filelock
 pynvml
 psutil
-WMI
+pymupdf
+WMI; sys_platform == "win32"
