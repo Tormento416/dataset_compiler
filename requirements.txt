@@ -1,0 +1,12 @@
+customtkinter
+pyinstaller
+aiohttp
+polars
+tqdm
+fastapi
+uvicorn
+requests
+filelock
+pynvml
+psutil
+WMI

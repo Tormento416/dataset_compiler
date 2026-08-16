@@ -1,0 +1,5 @@
+{
+    "aiEnvironmentManager.platform": "wsl",
+    "aiEnvironmentManager.pythonEnvType": "venv",
+    "aiEnvironmentManager.venvPath": "venv"
+}

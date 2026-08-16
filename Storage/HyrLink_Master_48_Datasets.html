@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HyrLink - Master 48 Datasets Directory</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 18mm 15mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8.5pt;
+                color: #0A369D;
+            }
+        }
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #111111;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.45;
+            font-size: 9.5pt;
+        }
+        
+        /* HyrLink Branding */
+        .brand-header {
+            text-align: left;
+            border-bottom: 3px solid #D4AF37; /* Gold */
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+        }
+        .brand-logo {
+            font-size: 26pt;
+            font-weight: 800;
+            color: #0A369D; /* Blue */
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        .brand-logo span { color: #D4AF37; }
+        .doc-subtitle {
+            font-size: 10.5pt;
+            color: #555555;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin: 3px 0 0 0;
+            font-weight: 600;
+        }
+        
+        /* Headings */
+        h2.section-title {
+            color: #0A369D;
+            font-size: 14pt;
+            border-left: 4px solid #D4AF37;
+            padding-left: 8px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            page-break-after: avoid;
+        }
+        h3.feature-title {
+            color: #111111;
+            font-size: 11pt;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 3px;
+            page-break-after: avoid;
+        }
+        
+        /* Lists & Links */
+        ul.dataset-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0 0 14px 0;
+        }
+        ul.dataset-list li {
+            margin-bottom: 6px;
+            padding-left: 14px;
+            position: relative;
+            font-size: 9pt;
+        }
+        ul.dataset-list li::before {
+            content: "■";
+            color: #D4AF37;
+            position: absolute;
+            left: 0;
+            font-size: 7.5pt;
+            top: 1px;
+        }
+        .link-text {
+            font-family: monospace;
+            font-size: 8.5pt;
+            color: #0A369D;
+            display: block;
+            margin-top: 1px;
+            word-break: break-all;
+        }
+        
+        /* Summary Cards */
+        .summary-box {
+            background: #fafbff;
+            border-left: 3px solid #0A369D;
+            border-top: 1px solid #eef2f7;
+            border-right: 1px solid #eef2f7;
+            border-bottom: 1px solid #eef2f7;
+            padding: 8px 11px;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+        }
+        .summary-title {
+            font-weight: bold;
+            color: #0A369D;
+            margin: 0 0 2px 0;
+            font-size: 9.5pt;
+        }
+        .summary-meta {
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            color: #D4AF37;
+            font-weight: bold;
+            margin-bottom: 3px;
+            letter-spacing: 0.5px;
+        }
+        .summary-text {
+            font-size: 8.5pt;
+            margin: 0;
+            color: #222222;
+            line-height: 1.35;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-header">
+        <h1 class="brand-logo">Hyr<span>Link</span></h1>
+        <h2 class="doc-subtitle">Master 48-Dataset Directory for Launch Features & Voice Pipeline</h2>
+    </div>
+
+    <p style="font-size: 9.5pt; margin-bottom: 18px;">
+        This directory provides <strong>48 curated open-source datasets</strong> (6 datasets across each of HyrLink’s 8 baseline launch features). It expands training coverage for resume transformation, deep probing, skill scoring, role-fit matchmaking, candidate proxy chat, and natural voice interaction (TTS prosody alignment & STT disfluency cleanup).
+    </p>
+
+    <!-- SECTION I: DOWNLOAD DIRECTORY -->
+    <h2 class="section-title">I. Dataset Download Directory (48 Sources)</h2>
+
+    <h3 class="feature-title">Feature 1: Resume Rewriting (Narrative Format)</h3>
+    <ul class="dataset-list">
+        <li><strong>callmeech / resume-score-details</strong><span class="link-text">https://huggingface.co/datasets/callmeech/resume-score-details</span></li>
+        <li><strong>WikiBio Dataset (Infobox to Narrative Bio)</strong><span class="link-text">https://huggingface.co/datasets/wiki_bio</span></li>
+        <li><strong>ResumeAtlas (13.3k Classified Experience Arcs)</strong><span class="link-text">https://huggingface.co/papers/2402.03832</span></li>
+        <li><strong>skepss / resume-job-description-fit</strong><span class="link-text">https://huggingface.co/datasets/skepss/resume-job-description-fit</span></li>
+        <li><strong>DatasetMaster Normalized Resumes (JSON Schema)</strong><span class="link-text">https://huggingface.co/datasets/datasetmaster/resumes</span></li>
+        <li><strong>Saugataroyarghya / Resume Dataset</strong><span class="link-text">https://www.kaggle.com/datasets/saugataroyarghya/resume-dataset</span></li>
+    </ul>
+
+    <h3 class="feature-title">Feature 2: Candidate Deep Dives (Questionnaire & Probing)</h3>
+    <ul class="dataset-list">
+        <li><strong>AnthropicInterviewer (1,250 Qualitative AI Transcripts)</strong><span class="link-text">https://huggingface.co/datasets/Anthropic/AnthropicInterviewer</span></li>
+        <li><strong>Inquisitive Question Generation Dataset</strong><span class="link-text">https://huggingface.co/datasets/inquisitive</span></li>
+        <li><strong>CounselChat (Active Listening & Reflective Follow-ups)</strong><span class="link-text">https://huggingface.co/datasets/nbertagnolli/counsel-chat</span></li>
+        <li><strong>Comprehensive QA Benchmark (CoQA & QuAC Multi-turn)</strong><span class="link-text">https://huggingface.co/datasets/Successmove/comprehensive-qa-dataset</span></li>
+        <li><strong>QASC (Question Answering via Sentence Composition)</strong><span class="link-text">https://huggingface.co/datasets/allenai/qasc</span></li>
+        <li><strong>MentalChat16K (Behavioral & Clinical Probing)</strong><span class="link-text">https://huggingface.co/datasets/ShenLab/MentalChat16K</span></li>
+    </ul>
+
+    <h3 class="feature-title">Feature 3: Skill Validation & Testing</h3>
+    <ul class="dataset-list">
+        <li><strong>SkillSpan (Hard & Soft Skill Extraction)</strong><span class="link-text">https://huggingface.co/datasets/jjzha/skillspan</span></li>
+        <li><strong>TechWolf Skill Extraction (ESCO Span Benchmark)</strong><span class="link-text">https://huggingface.co/datasets/TechWolf/skill-extraction-tech</span></li>
+        <li><strong>MBPP (Mostly Basic Python Problems)</strong><span class="link-text">https://huggingface.co/datasets/google-research-datasets/mbpp</span></li>
+        <li><strong>OpenAI HumanEval (Code Skill Execution)</strong><span class="link-text">https://huggingface.co/datasets/openai/openai_humaneval</span></li>
+        <li><strong>SWE-bench (Software Engineering Problem Solving)</strong><span class="link-text">https://huggingface.co/datasets/princeton-nlp/SWE-bench</span></li>
+        <li><strong>APPS Dataset (10,000 Coding Challenges)</strong><span class="link-text">https://huggingface.co/datasets/codeparrot/apps</span></li>
+    </ul>
+
+    <h3 class="feature-title">Feature 4: Role-Fit Scoring</h3>
+    <ul class="dataset-list">
+        <li><strong>Candidate Job Role & Skill Gap Dataset</strong><span class="link-text">https://www.kaggle.com/datasets/ckshetty/candidate-job-role-dataset</span></li>
+        <li><strong>AI Recruitment Pipeline Dataset</strong><span class="link-text">https://www.kaggle.com/datasets/yaswanthkumary/ai-recruitment-pipeline-dataset</span></li>
+        <li><strong>facehuggerapoorv / resume-jd-match</strong><span class="link-text">https://huggingface.co/datasets/facehuggerapoorv/resume-jd-match</span></li>
+        <li><strong>netsol / resume-score-details</strong><span class="link-text">https://huggingface.co/datasets/netsol/resume-score-details</span></li>
+        <li><strong>syncoraai / resume-screening-llm-training-dataset</strong><span class="link-text">https://www.kaggle.com/datasets/syncoraai/resume-screening-llm-training-dataset</span></li>
+        <li><strong>sonalshinde123 / ai-driven-resume-screening-dataset</strong><span class="link-text">https://www.kaggle.com/datasets/sonalshinde123/ai-driven-resume-screening-dataset</span></li>
+    </ul>
+
+    <h3 class="feature-title">Feature 5: Pro Chatbot (AI Proxy of Candidate)</h3>
+    <ul class="dataset-list">
+        <li><strong>Persona-Chat (Trait-Grounded Dialogue)</strong><span class="link-text">https://huggingface.co/datasets/facebook/persona_chat</span></li>
+        <li><strong>EmpatheticDialogues (Emotional Context Dialogue)</strong><span class="link-text">https://huggingface.co/datasets/facebook/empathetic_dialogues</span></li>
+        <li><strong>DailyDialog (Multi-turn Natural Conversation)</strong><span class="link-text">https://huggingface.co/datasets/daily_dialog</span></li>
+        <li><strong>Blended Skill Talk (Multi-skill Persona Conversations)</strong><span class="link-text">https://huggingface.co/datasets/facebook/blended_skill_talk</span></li>
+        <li><strong>OpenAssistant / oasst1 (Human-annotated Instruction Follow)</strong><span class="link-text">https://huggingface.co/datasets/OpenAssistant/oasst1</span></li>
+        <li><strong>Synthetic Persona Chat (Multi-perspective Dialogue)</strong><span class="link-text">https://huggingface.co/datasets/google/synthetic-persona-chat</span></li>
+    </ul>
+
+    <h3 class="feature-title">Feature 6: Recruiter Job Postings & Candidate Pairing</h3>
+    <ul class="dataset-list">
+        <li><strong>Candidate Recommendation Model Datasets</strong><span class="link-text">https://github.com/Srikar-R/Candidate-Recommendation-Model</span></li>
+        <li><strong>Salient Entity Extraction Dataset</strong><span class="link-text">https://github.com/acp19tag/skill-extraction-dataset</span></li>
+        <li><strong>Skill Scoring NLP Model Repository</strong><span class="link-text">https://github.com/OfirOhan/skill-scoring-nlp-model</span></li>
+        <li><strong>Resume Skills vs Interview Calls Dataset</strong><span class="link-text">https://www.kaggle.com/datasets/prince7489/resume-skills-vs-interview-calls-dataset</span></li>
+        <li><strong>Skill-Evol-Bench (Skill Evolution & Benchmark)</strong><span class="link-text">https://huggingface.co/datasets/SkillEvolBench-Team/Skill-Evol-Bench</span></li>
+        <li><strong>amjad-awad / skill-extractor</strong><span class="link-text">https://huggingface.co/amjad-awad/skill-extractor</span></li>
+    </ul>
+
+    <h3 class="feature-title">Feature 7: Voice Synthesization (TTS Alignment & Prosody)</h3>
+    <ul class="dataset-list">
+        <li><strong>DisfluencySpeech (Conversational Prosody & Paralanguage)</strong><span class="link-text">https://huggingface.co/datasets/amaai-lab/DisfluencySpeech</span></li>
+        <li><strong>SeamlessExpressive / Expresso (Expressive Prosody & Pitch)</strong><span class="link-text">https://huggingface.co/facebook/seamless-expressive</span></li>
+        <li><strong>LibriTTS-R (Restored Clean Audio & Duration Alignments)</strong><span class="link-text">https://huggingface.co/datasets/parler-tts/libritts_r_filtered</span></li>
+        <li><strong>LJSpeech (Single Speaker Benchmark Corpus)</strong><span class="link-text">https://huggingface.co/datasets/lj_speech</span></li>
+        <li><strong>CSTR VCTK Corpus (Multi-accent Speech Corpus)</strong><span class="link-text">https://huggingface.co/datasets/cstr-edinburgh/vctk</span></li>
+        <li><strong>MELD (Multimodal Emotion Lines Dataset)</strong><span class="link-text">https://huggingface.co/datasets/MELD</span></li>
+    </ul>
+
+    <h3 class="feature-title">Feature 8: Speech-to-Text (STT) Processing & Cleanup</h3>
+    <ul class="dataset-list">
+        <li><strong>ami-disfluency (Annotated Meeting Spoken Transcripts)</strong><span class="link-text">https://huggingface.co/datasets/hhoangphuoc/ami-disfluency</span></li>
+        <li><strong>Switchboard Disfluency Transcripts (switchboard_dps)</strong><span class="link-text">https://huggingface.co/datasets/switchboard_dps</span></li>
+        <li><strong>Transcription Cleanup Trainer (Raw vs Clean Pairs)</strong><span class="link-text">https://huggingface.co/datasets/danielrosehill/Transcription-Cleanup-Trainer</span></li>
+        <li><strong>Auto Whisper Disfluency Dataset</strong><span class="link-text">https://huggingface.co/datasets/pradachan/auto-whisper-disfluency</span></li>
+        <li><strong>VoxPopuli (Spontaneous Speech Transcripts)</strong><span class="link-text">https://huggingface.co/datasets/facebook/voxpopuli</span></li>
+        <li><strong>LibriSpeech ASR (Clean & Other Transcripts)</strong><span class="link-text">https://huggingface.co/datasets/librispeech_asr</span></li>
+    </ul>
+
+    <!-- SECTION II: SUMMARIES -->
+    <h2 class="section-title">II. Dataset Summaries & Use Cases</h2>
+
+    <!-- Feature 1 -->
+    <h3 class="feature-title">Feature 1: Resume Rewriting (Narrative Format)</h3>
+    <div class="summary-box">
+        <div class="summary-title">1. callmeech / resume-score-details</div>
+        <div class="summary-meta">Category: Narrative Resume Transformation</div>
+        <div class="summary-text"><strong>Summary:</strong> 1,031 paired resumes and JDs generated with GPT-4o containing rich micro/macro justification narratives.<br><strong>Use Case:</strong> Teaches the SLM to convert dry experience bullets into persuasive narrative summaries.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">2. WikiBio Dataset</div>
+        <div class="summary-meta">Category: Tabular to Prose Synthesis</div>
+        <div class="summary-text"><strong>Summary:</strong> 728,321 Wikipedia infobox tables mapped directly to introductory narrative biographical paragraphs.<br><strong>Use Case:</strong> Fine-tunes structured-data-to-narrative generation, preserving exact facts without dropping metrics.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">3. ResumeAtlas</div>
+        <div class="summary-meta">Category: Seniority Narrative Alignment</div>
+        <div class="summary-text"><strong>Summary:</strong> 13,389 resumes with multi-round human expert annotations mapped to experience tiers.<br><strong>Use Case:</strong> Rewrites candidate bullet points into executive narrative stories matching target seniority.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">4. skepss / resume-job-description-fit</div>
+        <div class="summary-meta">Category: Resume Contextual Framing</div>
+        <div class="summary-text"><strong>Summary:</strong> Contextually paired resumes and job descriptions emphasizing career trajectory alignment.<br><strong>Use Case:</strong> Teaches the SLM to frame a candidate's historical experience around the target role's narrative arc.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">5. DatasetMaster Normalized Resumes</div>
+        <div class="summary-meta">Category: Clean JSON Parsing</div>
+        <div class="summary-text"><strong>Summary:</strong> Clean JSON schema normalization of raw candidate resumes.<br><strong>Use Case:</strong> Provides clean input schema structuring before sending extracted data into narrative generation prompts.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">6. Saugataroyarghya / Resume Dataset</div>
+        <div class="summary-meta">Category: Multi-discipline Summarization</div>
+        <div class="summary-text"><strong>Summary:</strong> 10,000 resumes across 25 career domains paired with candidate objectives.<br><strong>Use Case:</strong> Expands domain-specific vocabulary for rewriting engineering, marketing, finance, and product resumes.</div>
+    </div>
+
+    <!-- Feature 2 -->
+    <h3 class="feature-title">Feature 2: Candidate Deep Dives (Questionnaire & Probing)</h3>
+    <div class="summary-box">
+        <div class="summary-title">7. AnthropicInterviewer</div>
+        <div class="summary-meta">Category: Qualitative AI Probing</div>
+        <div class="summary-text"><strong>Summary:</strong> 1,250 qualitative, semi-structured interviews conducted by AI.<br><strong>Use Case:</strong> Fine-tunes the SLM on how to ask deep follow-up questions based on unpolished candidate answers.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">8. Inquisitive Question Generation</div>
+        <div class="summary-meta">Category: Elicitative Questioning</div>
+        <div class="summary-text"><strong>Summary:</strong> 19,000 text spans paired with questions designed to evoke deeper explanations and underlying motivations.<br><strong>Use Case:</strong> Generates targeted follow-up questions when a candidate provides brief or ambiguous answers.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">9. CounselChat</div>
+        <div class="summary-meta">Category: Reflective Listening</div>
+        <div class="summary-text"><strong>Summary:</strong> Counseling dialogues focusing on reflective active listening and underlying context extraction.<br><strong>Use Case:</strong> Teaches HyrLink to uncover root candidate experiences and core achievements behind unpolished answers.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">10. Comprehensive QA Benchmark</div>
+        <div class="summary-meta">Category: Multi-turn QA Logic</div>
+        <div class="summary-text"><strong>Summary:</strong> 160k+ QA pairs combining CoQA and QuAC multi-turn conversational dialogs.<br><strong>Use Case:</strong> Maintains contextual memory over multi-step questionnaire deep dives with candidates.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">11. QASC (Sentence Composition)</div>
+        <div class="summary-meta">Category: Fact Synthesis</div>
+        <div class="summary-text"><strong>Summary:</strong> Multi-fact reasoning dataset combining separate facts into unified explanations.<br><strong>Use Case:</strong> Synthesizes multiple scattered candidate answers into one coherent career story.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">12. MentalChat16K</div>
+        <div class="summary-meta">Category: Behavioral Probing</div>
+        <div class="summary-text"><strong>Summary:</strong> 16,000 multi-turn behavioral dialogues focused on personal narrative extraction.<br><strong>Use Case:</strong> Probes candidate soft skills, workplace challenge handling, and interpersonal style.</div>
+    </div>
+
+    <!-- Feature 3 -->
+    <h3 class="feature-title">Feature 3: Skill Validation & Testing</h3>
+    <div class="summary-box">
+        <div class="summary-title">13. SkillSpan</div>
+        <div class="summary-meta">Category: Skill Extraction</div>
+        <div class="summary-text"><strong>Summary:</strong> ESCO-mapped hard/soft skill span annotations from job texts.<br><strong>Use Case:</strong> Extracts granular skills from candidate claims to isolate what needs to be validated.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">14. TechWolf Skill Extraction</div>
+        <div class="summary-meta">Category: Technical Skill Boundaries</div>
+        <div class="summary-text"><strong>Summary:</strong> Sentence and span-level skill tags across technical job postings.<br><strong>Use Case:</strong> Defines technical boundaries so HyrLink generates domain-accurate testing scenarios.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">15. MBPP (Mostly Basic Python Problems)</div>
+        <div class="summary-meta">Category: Entry/Mid Skill Validation</div>
+        <div class="summary-text"><strong>Summary:</strong> 974 programming problems with task descriptions, code solutions, and test cases.<br><strong>Use Case:</strong> Evaluates entry-level technical candidate responses with automated test case validation.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">16. OpenAI HumanEval</div>
+        <div class="summary-meta">Category: Logic Validation</div>
+        <div class="summary-text"><strong>Summary:</strong> 164 hand-crafted coding problems with unit tests and docstrings.<br><strong>Use Case:</strong> Generates dynamic live-coding scenario prompts and evaluates code correctness.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">17. SWE-bench</div>
+        <div class="summary-meta">Category: Complex System Validation</div>
+        <div class="summary-text"><strong>Summary:</strong> Real software engineering GitHub issues, code patches, and test suite executions.<br><strong>Use Case:</strong> Validates senior technical claims by setting up realistic engineering problem-solving scenarios.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">18. APPS Dataset</div>
+        <div class="summary-meta">Category: Comprehensive Technical Testing</div>
+        <div class="summary-text"><strong>Summary:</strong> 10,000 coding problems ranging from introductory to competitive programming.<br><strong>Use Case:</strong> Calibrates numeric skill validation scores based on problem difficulty tier.</div>
+    </div>
+
+    <!-- Feature 4 -->
+    <h3 class="feature-title">Feature 4: Role-Fit Scoring</h3>
+    <div class="summary-box">
+        <div class="summary-title">19. Candidate Job Role & Skill Gap Dataset</div>
+        <div class="summary-meta">Category: Gap Analysis</div>
+        <div class="summary-text"><strong>Summary:</strong> Candidate profiles paired with target job roles and explicit skill gap annotations.<br><strong>Use Case:</strong> Directly trains the SLM to output "What's Missing" reports and weighted gap scores.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">20. AI Recruitment Pipeline Dataset</div>
+        <div class="summary-meta">Category: Outcome-Calibrated Matching</div>
+        <div class="summary-text"><strong>Summary:</strong> Resume and screening data linked to actual final hiring decisions.<br><strong>Use Case:</strong> Calibrates role-fit scoring models against real recruitment selection outcomes.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">21. facehuggerapoorv / resume-jd-match</div>
+        <div class="summary-meta">Category: Semantic Fit Rating</div>
+        <div class="summary-text"><strong>Summary:</strong> Paired resume and JD samples with semantic match scores.<br><strong>Use Case:</strong> Fine-tunes overall profile alignment scoring logic.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">22. netsol / resume-score-details</div>
+        <div class="summary-meta">Category: Macro/Micro Weighting</div>
+        <div class="summary-text"><strong>Summary:</strong> Resumes scored against JDs with explicit macro (experience/strategy) and micro (skill) weighting.<br><strong>Use Case:</strong> Teaches HyrLink to generate structured weighted scoring rubrics and justification paragraphs.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">23. syncoraai / resume-screening-llm-training</div>
+        <div class="summary-meta">Category: Synthetic Screening Instruction</div>
+        <div class="summary-text"><strong>Summary:</strong> Instruction dataset for candidate evaluation and ranking.<br><strong>Use Case:</strong> Enhances instruction following for complex multi-criteria candidate screening prompts.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">24. sonalshinde123 / ai-driven-resume-screening</div>
+        <div class="summary-meta">Category: Multi-category Screening</div>
+        <div class="summary-text"><strong>Summary:</strong> Multi-category candidate screening dataset with explicit qualification badges.<br><strong>Use Case:</strong> Improves hard skill and qualification check accuracy during scoring.</div>
+    </div>
+
+    <!-- Feature 5 -->
+    <h3 class="feature-title">Feature 5: Pro Chatbot (AI Proxy of Candidate)</h3>
+    <div class="summary-box">
+        <div class="summary-title">25. Persona-Chat</div>
+        <div class="summary-meta">Category: Trait Grounding</div>
+        <div class="summary-text"><strong>Summary:</strong> Multi-turn dialogues where agents adhere strictly to assigned background facts and tone.<br><strong>Use Case:</strong> Ensures the Pro Chatbot maintains candidate personality and career facts in recruiter interviews.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">26. EmpatheticDialogues</div>
+        <div class="summary-meta">Category: Emotional Alignment</div>
+        <div class="summary-text"><strong>Summary:</strong> 25k conversations grounded in emotional contexts.<br><strong>Use Case:</strong> Infuses warmth, confidence, and natural emotional tone into candidate proxy responses.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">27. DailyDialog</div>
+        <div class="summary-meta">Category: Natural Dialogue Flow</div>
+        <div class="summary-text"><strong>Summary:</strong> High-quality multi-turn dialogues covering daily life and professional interactions.<br><strong>Use Case:</strong> Fine-tunes conversational turn-taking, cadence, and backchanneling.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">28. Blended Skill Talk</div>
+        <div class="summary-meta">Category: Multi-skill Persona Switching</div>
+        <div class="summary-text"><strong>Summary:</strong> Dialogues combining persona adherence, knowledge sharing, and empathy.<br><strong>Use Case:</strong> Enables the proxy chatbot to discuss technical skills while staying in candidate persona.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">29. OpenAssistant / oasst1</div>
+        <div class="summary-meta">Category: Human Instruction Following</div>
+        <div class="summary-text"><strong>Summary:</strong> Human-annotated conversational instruction dataset.<br><strong>Use Case:</strong> Improves responsiveness to unexpected recruiter questions during AI proxy interviews.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">30. Synthetic Persona Chat</div>
+        <div class="summary-meta">Category: Extended Persona Consistency</div>
+        <div class="summary-text"><strong>Summary:</strong> Extended multi-turn dialogues featuring detailed character profiles.<br><strong>Use Case:</strong> Prevents persona degradation during long recruiter chat sessions.</div>
+    </div>
+
+    <!-- Feature 6 -->
+    <h3 class="feature-title">Feature 6: Recruiter Job Postings & Candidate Pairing</h3>
+    <div class="summary-box">
+        <div class="summary-title">31. Candidate Recommendation Model Datasets</div>
+        <div class="summary-meta">Category: Pool Matchmaking</div>
+        <div class="summary-text"><strong>Summary:</strong> Frameworks mapping recruiter job requisitions to candidate pools.<br><strong>Use Case:</strong> Ranks candidate databases against new job postings and picks top choices.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">32. Salient Entity Extraction Dataset</div>
+        <div class="summary-meta">Category: Requisition Parsing</div>
+        <div class="summary-text"><strong>Summary:</strong> Labeled entity spans in job text (skills, domain, experience).<br><strong>Use Case:</strong> Parses recruiter job postings into structured search queries.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">33. Skill Scoring NLP Model Repository</div>
+        <div class="summary-meta">Category: Candidate Ranking Logic</div>
+        <div class="summary-text"><strong>Summary:</strong> Semantic evaluation metrics for scoring candidate skills against job requirements.<br><strong>Use Case:</strong> Drives comparative candidate selection rationales.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">34. Resume Skills vs Interview Calls</div>
+        <div class="summary-meta">Category: Call-back Probability Calibration</div>
+        <div class="summary-text"><strong>Summary:</strong> Resume feature sets correlated with actual interview invitation rates.<br><strong>Use Case:</strong> Calibrates candidate pairing logic toward profiles most likely to get interview calls.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">35. Skill-Evol-Bench</div>
+        <div class="summary-meta">Category: Skill Taxonomy Mapping</div>
+        <div class="summary-text"><strong>Summary:</strong> Evolving skill benchmark mapping legacy skill names to modern tech stack equivalents.<br><strong>Use Case:</strong> Matches candidate profiles with older skill phrasing to modern job descriptions.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">36. amjad-awad / skill-extractor</div>
+        <div class="summary-meta">Category: Rapid Skill Extraction</div>
+        <div class="summary-text"><strong>Summary:</strong> Lightweight skill extraction model and training corpus.<br><strong>Use Case:</strong> Powers fast candidate filtering across large resume databases.</div>
+    </div>
+
+    <!-- Feature 7 -->
+    <h3 class="feature-title">Feature 7: Voice Synthesization (TTS Alignment & Prosody)</h3>
+    <div class="summary-box">
+        <div class="summary-title">37. DisfluencySpeech</div>
+        <div class="summary-meta">Category: Conversational Paralanguage</div>
+        <div class="summary-text"><strong>Summary:</strong> Studio conversational English speech dataset with annotated non-speech events and pause markers.<br><strong>Use Case:</strong> Inserts natural paralanguage markers (`[laughter]`, `[sigh]`, `[pause]`) into TTS text.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">38. SeamlessExpressive / Expresso</div>
+        <div class="summary-meta">Category: Pitch & Prosody Mapping</div>
+        <div class="summary-text"><strong>Summary:</strong> High-quality expressive speech annotated with pitch contours, speech rate, and emotion styles.<br><strong>Use Case:</strong> Teaches the SLM to output SSML prosody tags to control downstream voice style.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">39. LibriTTS-R</div>
+        <div class="summary-meta">Category: Restored Clean Prosody</div>
+        <div class="summary-text"><strong>Summary:</strong> 585 hours of clean restored audio with normalized text and phonetic alignments.<br><strong>Use Case:</strong> Fine-tunes phonetic spelling hints and text normalization for crisp pronunciation.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">40. LJSpeech</div>
+        <div class="summary-meta">Category: Single-Speaker Acoustic Baseline</div>
+        <div class="summary-text"><strong>Summary:</strong> 13,100 clean single-speaker audio clips with exact transcriptions.<br><strong>Use Case:</strong> Provides acoustic baseline alignment for clean text-to-phoneme output generation.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">41. CSTR VCTK Corpus</div>
+        <div class="summary-meta">Category: Multi-accent Prosody</div>
+        <div class="summary-text"><strong>Summary:</strong> Speech recordings from 110 English speakers across diverse regional accents.<br><strong>Use Case:</strong> Prepares the SLM to format text for diverse candidate voice clones and accents.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">42. MELD (Multimodal Emotion Lines)</div>
+        <div class="summary-meta">Category: Conversational Emotion Tags</div>
+        <div class="summary-text"><strong>Summary:</strong> Conversational dialogue audio tagged with emotion labels (joy, surprise, fear, neutral).<br><strong>Use Case:</strong> Maps candidate conversational intent to explicit emotional tags for expressive TTS rendering.</div>
+    </div>
+
+    <!-- Feature 8 -->
+    <h3 class="feature-title">Feature 8: Speech-to-Text (STT) Processing & Cleanup</h3>
+    <div class="summary-box">
+        <div class="summary-title">43. ami-disfluency</div>
+        <div class="summary-meta">Category: Spoken Disfluency Annotations</div>
+        <div class="summary-text"><strong>Summary:</strong> 35,000+ annotated disfluency segments (false starts, stutters, filler words) in meeting audio.<br><strong>Use Case:</strong> Fine-tunes the SLM to clean unedited spoken transcriptions into clear text.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">44. Switchboard Disfluency Transcripts</div>
+        <div class="summary-meta">Category: Raw vs Clean Spoken Text</div>
+        <div class="summary-text"><strong>Summary:</strong> Conversational transcripts with explicit disfluency edit tags.<br><strong>Use Case:</strong> Strips filler words ("um/uh", false starts) while preserving candidate core intent.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">45. Transcription Cleanup Trainer</div>
+        <div class="summary-meta">Category: Goldilocks Transcript Cleanup</div>
+        <div class="summary-text"><strong>Summary:</strong> Paired raw Whisper transcripts and manually cleaned ground-truth targets.<br><strong>Use Case:</strong> Directly trains the SLM to transform raw ASR audio transcripts into polished sentences.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">46. Auto Whisper Disfluency Dataset</div>
+        <div class="summary-meta">Category: ASR Disfluency Reduction</div>
+        <div class="summary-text"><strong>Summary:</strong> Benchmark dataset paired for training ASR post-processing cleanup models.<br><strong>Use Case:</strong> Cuts transcription artifacts and run-on sentences in spoken candidate answers.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">47. VoxPopuli</div>
+        <div class="summary-meta">Category: Spontaneous Speech Transcripts</div>
+        <div class="summary-text"><strong>Summary:</strong> Large-scale spontaneous speech transcripts with natural speech disfluencies.<br><strong>Use Case:</strong> Improves SLM robustness against noisy, informal, or accented candidate audio transcriptions.</div>
+    </div>
+    <div class="summary-box">
+        <div class="summary-title">48. LibriSpeech ASR</div>
+        <div class="summary-meta">Category: Acoustic Text Normalization</div>
+        <div class="summary-text"><strong>Summary:</strong> 1,000 hours of read speech with normalized vs unnormalized text transcriptions.<br><strong>Use Case:</strong> Handles number expansion, acronym normalization, and punctuation restoration in raw STT text.</div>
+    </div>
+
+</body>
+</html>

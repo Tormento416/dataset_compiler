@@ -1,0 +1,172 @@
+import asyncio
+import os
+from pathlib import Path
+from typing import List, Dict, Optional
+import aiohttp
+import polars as pl
+from tqdm.asyncio import tqdm
+
+
+# ==========================================
+# 1. Local File Discovery Tool
+# ==========================================
+def find_local_datasets(
+    search_paths: List[str],
+    extensions: List[str] = [".parquet", ".csv", ".json", ".jsonl"],
+    recursive: bool = True
+) -> List[Path]:
+    """
+    Recursively scans local folders/drives for dataset files matching specified extensions.
+    """
+    found_files = set()
+    
+    for path_str in search_paths:
+        path = Path(path_str).expanduser().resolve()
+        
+        if path.is_file() and path.suffix.lower() in extensions:
+            found_files.add(path)
+        elif path.is_dir():
+            pattern = f"**/*" if recursive else "*"
+            for ext in extensions:
+                # Matches extension variants (e.g., .csv, .parquet, .jsonl)
+                found_files.update(path.glob(f"{pattern}{ext}"))
+
+    files_list = sorted([f for f in found_files if f.is_file()])
+    print(f"Discovered {len(files_list)} local dataset file(s) across specified directories.")
+    return files_list
+
+
+# ==========================================
+# 2. Asynchronous Concurrent Downloader
+# ==========================================
+async def _download_single_file(
+    session: aiohttp.ClientSession, 
+    url: str, 
+    dest_dir: Path, 
+    semaphore: asyncio.Semaphore
+) -> Path:
+    filename = dest_dir / url.split("/")[-1]
+    async with semaphore:
+        async with session.get(url) as response:
+            response.raise_for_status()
+            with open(filename, "wb") as f:
+                async for chunk in response.content.iter_chunked(1024 * 1024):
+                    f.write(chunk)
+    return filename
+
+
+async def download_datasets(urls: List[str], output_dir: str, max_concurrent: int = 8) -> List[Path]:
+    """Downloads dataset files concurrently with rate limiting."""
+    dest_path = Path(output_dir).expanduser().resolve()
+    dest_path.mkdir(parents=True, exist_ok=True)
+    
+    semaphore = asyncio.Semaphore(max_concurrent)
+    async with aiohttp.ClientSession() as session:
+        tasks = [_download_single_file(session, url, dest_path, semaphore) for url in urls]
+        return await tqdm.gather(*tasks, desc="Downloading Datasets")
+
+
+# ==========================================
+# 3. Out-of-Core Processing & Deduplication
+# ==========================================
+def parse_and_consolidate(
+    file_paths: List[Path],
+    output_path: str,
+    dedup_columns: List[str],
+    column_mapping: Optional[Dict[str, str]] = None,
+    compression: str = "zstd"
+) -> None:
+    """
+    Parses heterogeneous dataset formats across multiple directories, standardizes 
+    schemas, deduplicates out-of-core, and streams to a single Parquet dataset.
+    """
+    lazy_frames = []
+
+    for file in file_paths:
+        ext = file.suffix.lower()
+        
+        if ext == ".parquet":
+            lf = pl.scan_parquet(file)
+        elif ext in [".json", ".jsonl"]:
+            lf = pl.scan_ndjson(file)
+        elif ext == ".csv":
+            lf = pl.scan_csv(file, ignore_errors=True)
+        else:
+            continue
+
+        if column_mapping:
+            existing_cols = lf.collect_schema().names()
+            rename_dict = {k: v for k, v in column_mapping.items() if k in existing_cols}
+            if rename_dict:
+                lf = lf.rename(rename_dict)
+
+        lazy_frames.append(lf)
+
+    if not lazy_frames:
+        raise ValueError("No valid dataset files found for processing.")
+
+    # Combine datasets even if schemas vary across sources
+    combined_lf = pl.concat(lazy_frames, how="diagonal")
+
+    # Out-of-core deduplication
+    deduplicated_lf = combined_lf.unique(subset=dedup_columns, keep="first")
+
+    # Stream output directly to target location
+    target_path = Path(output_path).expanduser().resolve()
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    deduplicated_lf.sink_parquet(target_path, compression=compression)
+    print(f"Processing complete. Consolidated dataset saved to: {target_path}")
+
+
+# ==========================================
+# 4. Integrated Execution Pipeline
+# ==========================================
+if __name__ == "__main__":
+    # Remote URLs to download
+    DATASET_URLS = [
+        "https://example.com/data_part1.jsonl",
+        "https://example.com/data_part2.csv"
+    ]
+    
+    # Local directories/files located anywhere on your system
+    LOCAL_SEARCH_PATHS = [
+        "~/Downloads/archive_datasets",
+        "D:/Data/External_Corpus",
+        "/var/data/custom_dataset.parquet"
+    ]
+
+    DOWNLOAD_DIR = "./raw_data"
+    FINAL_OUTPUT_FILE = "./consolidated_output/train_data.parquet"
+
+    # Step 1: Download remote datasets
+    downloaded_files = []
+    if DATASET_URLS:
+        downloaded_files = asyncio.run(
+            download_datasets(DATASET_URLS, output_dir=DOWNLOAD_DIR, max_concurrent=4)
+        )
+
+    # Step 2: Search local system directories for existing datasets
+    local_files = find_local_datasets(
+        search_paths=LOCAL_SEARCH_PATHS,
+        extensions=[".parquet", ".csv", ".json", ".jsonl"],
+        recursive=True
+    )
+
+    # Step 3: Combine all paths (Remote Downloads + Discovered Local Files)
+    all_files_to_process = list(set(downloaded_files + local_files))
+
+    # Step 4: Map varying headers to a unified schema
+    COLUMN_MAP = {
+        "raw_text": "text",
+        "content": "text",
+        "document_id": "id",
+        "guid": "id"
+    }
+
+    # Step 5: Process, unify, deduplicate, and stream output
+    parse_and_consolidate(
+        file_paths=all_files_to_process,
+        output_path=FINAL_OUTPUT_FILE,
+        dedup_columns=["text"],
+        column_mapping=COLUMN_MAP
+    )
