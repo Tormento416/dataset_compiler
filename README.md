@@ -14,7 +14,7 @@ A desktop tool that pulls dataset files from remote URLs and local folders — C
 ## Requirements
 
 - Python 3.10 or newer (developed and tested on 3.13)
-- On Linux, Tk must be installed at the OS level (it's not a pip package): `sudo apt install python3-tk` (Debian/Ubuntu) or `sudo dnf install python3-tkinter` (Fedora)
+- On Linux, Tk must be installed at the OS level (it's not a pip package). `run.sh` and `build.sh` detect and install it automatically via apt/dnf/yum/pacman/zypper (will prompt for `sudo`); to do it yourself: `sudo apt install python3-tk` (Debian/Ubuntu) or `sudo dnf install python3-tkinter` (Fedora)
 - An NVIDIA GPU is optional — VRAM monitoring is best-effort and simply shows "N/A" without one
 
 ## Running on Windows
@@ -39,10 +39,9 @@ venv\Scripts\python downloader_gui.py
 There's no prebuilt binary for these — PyInstaller can't cross-compile, so a Windows-built `.exe` won't run there. Run from source instead:
 
 ```bash
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-venv/bin/python downloader_gui.py
+./run.sh
 ```
+This creates the venv, installs Python dependencies, installs the OS-level Tk package if it's missing (prompting for `sudo` on Linux), and launches the GUI. Re-run it any time; it reuses the existing venv.
 
 To build a standalone binary for your own machine (optional):
 ```bash

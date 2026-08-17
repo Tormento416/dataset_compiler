@@ -3,6 +3,9 @@
 # PyInstaller does not cross-compile - this must be run ON the target OS
 # to produce that OS's binary.
 set -e
+cd "$(dirname "$0")"
+source ensure_tk.sh
+ensure_tk
 
 VENV_PY="venv/bin/python"
 if [ ! -x "$VENV_PY" ]; then
