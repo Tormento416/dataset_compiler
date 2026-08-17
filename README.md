@@ -62,7 +62,7 @@ For very large jobs, `coordinator.py` + `writer.py` let multiple machines (or mu
 python coordinator.py      # starts the task queue on port 8000
 python writer.py           # run on as many machines/processes as you want
 ```
-`run_cluster.bat` starts a coordinator and 3 local writers on Windows as an example. Submit a job via `POST /job` on the coordinator (see `coordinator.py` for the request schema).
+`run_cluster.bat` (Windows) / `run_cluster.sh` (Linux/macOS) start a coordinator and 3 local writers as an example. Submit a job via `POST /job` on the coordinator (see `coordinator.py` for the request schema).
 
 ## Notes
 
