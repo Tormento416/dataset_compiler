@@ -37,10 +37,24 @@ def _drop_empty_text(df):
         return df
     return df.filter(pl.col("text").is_not_null() & (pl.col("text").str.strip_chars() != ""))
 
+def _normalize_schema(df):
+    """Casts the canonical 'id'/'text' columns to string. A numeric-looking id
+    like "1" gets auto-inferred as Int64 from a CSV but stays a string when the
+    same value comes from JSON/Parquet with an explicit schema -- merging two
+    files that disagree on this dtype otherwise fails outright."""
+    casts = [
+        pl.col(c).cast(pl.Utf8)
+        for c in ("id", "text")
+        if c in df.columns and df.schema[c] != pl.Utf8
+    ]
+    return df.with_columns(casts) if casts else df
+
 def _read_output(target_path: Path):
     if target_path.suffix.lower() == ".jsonl":
-        return pl.read_ndjson(target_path)
-    return pl.read_parquet(target_path)
+        df = pl.read_ndjson(target_path)
+    else:
+        df = pl.read_parquet(target_path)
+    return _normalize_schema(df)
 
 def _write_output(df, target_path: Path, compression: str):
     if target_path.suffix.lower() == ".jsonl":
@@ -86,11 +100,11 @@ def process_file(task):
             if valid_dedup_cols:
                 lf = lf.unique(subset=valid_dedup_cols, keep="first")
 
-        df_new = lf.collect()
+        df_new = _normalize_schema(lf.collect())
 
         target_path = Path(output_file).expanduser().resolve()
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         lock_path = str(target_path) + ".lock"
         
         print(f"Waiting for global file lock on {target_path.name}...")
