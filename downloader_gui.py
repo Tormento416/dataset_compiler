@@ -58,22 +58,28 @@ def find_local_datasets(
     print(f"Discovered {len(files_list)} local dataset file(s) across specified directories.")
     return files_list
 
-async def _download_single_file(session: aiohttp.ClientSession, url: str, dest_dir: Path, semaphore: asyncio.Semaphore) -> Optional[Path]:
+async def _download_single_file(session: aiohttp.ClientSession, url: str, dest_dir: Path, semaphore: asyncio.Semaphore, locks: Dict[str, asyncio.Lock]) -> Optional[Path]:
     try:
         clean_url = url.split("?")[0].rstrip("/")
         filename_str = clean_url.split("/")[-1]
-        
+
         if not filename_str:
             import time
             filename_str = f"file_{int(time.time())}.bin"
-            
+
         filename = dest_dir / filename_str
-        
+
         if filename.is_dir():
             import time
             filename = dest_dir / f"{filename_str}_{int(time.time())}.bin"
-            
-        async with semaphore:
+
+        # Two URLs can resolve to the same destination filename (duplicate URLs,
+        # cache-busting query strings, etc.). Without this lock, concurrent
+        # downloads racing on the same `open(..., "wb")` can interleave or
+        # truncate each other's writes.
+        lock = locks.setdefault(str(filename), asyncio.Lock())
+
+        async with semaphore, lock:
             async with session.get(url) as response:
                 response.raise_for_status()
                 with open(filename, "wb") as f:
@@ -88,8 +94,9 @@ async def download_datasets(urls: List[str], output_dir: str, max_concurrent: in
     dest_path = Path(output_dir).expanduser().resolve()
     dest_path.mkdir(parents=True, exist_ok=True)
     semaphore = asyncio.Semaphore(max_concurrent)
+    locks: Dict[str, asyncio.Lock] = {}
     async with aiohttp.ClientSession(headers=headers) as session:
-        tasks = [_download_single_file(session, url, dest_path, semaphore) for url in urls]
+        tasks = [_download_single_file(session, url, dest_path, semaphore, locks) for url in urls]
         results = await tqdm.gather(*tasks, desc="Downloading Datasets", file=sys.stdout)
         return [r for r in results if r is not None]
 
@@ -117,6 +124,14 @@ def _extract_pdf_text(file_path: Path):
     finally:
         doc.close()
     return pl.DataFrame({"id": [file_path.stem], "text": [text]}).lazy()
+
+def _drop_empty_text(df):
+    """Drops rows with a null or whitespace-only 'text' value -- these are unusable
+    as SLM/LLM training examples and would otherwise pass through silently."""
+    if "text" not in df.columns:
+        return df
+    return df.filter(pl.col("text").is_not_null() & (pl.col("text").str.strip_chars() != ""))
+
 
 def process_single_file(file_path: Path, output_file: str, dedup_columns: List[str], column_mapping: Optional[Dict[str, str]], compression: str):
     import polars as pl
@@ -164,9 +179,11 @@ def process_single_file(file_path: Path, output_file: str, dedup_columns: List[s
                     valid_dedup_cols = [c for c in dedup_columns if c in df_combined.columns]
                     if valid_dedup_cols:
                         df_combined = df_combined.unique(subset=valid_dedup_cols, keep="first")
-                        
+
+                df_combined = _drop_empty_text(df_combined)
                 df_combined.write_parquet(target_path, compression=compression)
             else:
+                df_new = _drop_empty_text(df_new)
                 df_new.write_parquet(target_path, compression=compression)
                 
         return f"Successfully processed {file_path.name}"

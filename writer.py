@@ -30,6 +30,13 @@ def _extract_pdf_text(file_path: Path):
         doc.close()
     return pl.DataFrame({"id": [file_path.stem], "text": [text]}).lazy()
 
+def _drop_empty_text(df):
+    """Drops rows with a null or whitespace-only 'text' value -- these are unusable
+    as SLM/LLM training examples and would otherwise pass through silently."""
+    if "text" not in df.columns:
+        return df
+    return df.filter(pl.col("text").is_not_null() & (pl.col("text").str.strip_chars() != ""))
+
 def process_file(task):
     file_path_str = task["file"]
     output_file = task["output_file"]
@@ -90,10 +97,12 @@ def process_file(task):
                     valid_dedup_cols = [c for c in dedup_columns if c in df_combined.columns]
                     if valid_dedup_cols:
                         df_combined = df_combined.unique(subset=valid_dedup_cols, keep="first")
-                        
+
+                df_combined = _drop_empty_text(df_combined)
                 df_combined.write_parquet(target_path, compression=compression)
             else:
                 print(f"Lock acquired. Creating new dataset...")
+                df_new = _drop_empty_text(df_new)
                 df_new.write_parquet(target_path, compression=compression)
                 
         return True, None
