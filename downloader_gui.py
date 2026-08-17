@@ -58,7 +58,22 @@ def find_local_datasets(
     print(f"Discovered {len(files_list)} local dataset file(s) across specified directories.")
     return files_list
 
-async def _download_single_file(session: aiohttp.ClientSession, url: str, dest_dir: Path, semaphore: asyncio.Semaphore, locks: Dict[str, asyncio.Lock]) -> Optional[Path]:
+def _reserve_unique_name(dest_dir: Path, filename_str: str, claimed_names: set) -> Path:
+    """Picks a destination filename that doesn't collide with an on-disk file/dir
+    or one another download in this same job has already claimed, appending
+    `_2`, `_3`, ... instead of silently overwriting. Must run without an
+    `await` in the middle so the check-then-claim is atomic under asyncio's
+    cooperative scheduling."""
+    stem, suffix = Path(filename_str).stem, Path(filename_str).suffix
+    candidate = filename_str
+    counter = 1
+    while candidate in claimed_names or (dest_dir / candidate).exists():
+        counter += 1
+        candidate = f"{stem}_{counter}{suffix}"
+    claimed_names.add(candidate)
+    return dest_dir / candidate
+
+async def _download_single_file(session: aiohttp.ClientSession, url: str, dest_dir: Path, semaphore: asyncio.Semaphore, claimed_names: set) -> Optional[Path]:
     try:
         clean_url = url.split("?")[0].rstrip("/")
         filename_str = clean_url.split("/")[-1]
@@ -67,19 +82,13 @@ async def _download_single_file(session: aiohttp.ClientSession, url: str, dest_d
             import time
             filename_str = f"file_{int(time.time())}.bin"
 
-        filename = dest_dir / filename_str
+        # Two URLs (duplicate URLs, cache-busting query strings, or just two
+        # different sources sharing a basename) can resolve to the same
+        # destination filename. Reserve a unique one up front instead of
+        # letting the second download silently overwrite the first.
+        filename = _reserve_unique_name(dest_dir, filename_str, claimed_names)
 
-        if filename.is_dir():
-            import time
-            filename = dest_dir / f"{filename_str}_{int(time.time())}.bin"
-
-        # Two URLs can resolve to the same destination filename (duplicate URLs,
-        # cache-busting query strings, etc.). Without this lock, concurrent
-        # downloads racing on the same `open(..., "wb")` can interleave or
-        # truncate each other's writes.
-        lock = locks.setdefault(str(filename), asyncio.Lock())
-
-        async with semaphore, lock:
+        async with semaphore:
             async with session.get(url) as response:
                 response.raise_for_status()
                 with open(filename, "wb") as f:
@@ -94,9 +103,9 @@ async def download_datasets(urls: List[str], output_dir: str, max_concurrent: in
     dest_path = Path(output_dir).expanduser().resolve()
     dest_path.mkdir(parents=True, exist_ok=True)
     semaphore = asyncio.Semaphore(max_concurrent)
-    locks: Dict[str, asyncio.Lock] = {}
+    claimed_names: set = set()
     async with aiohttp.ClientSession(headers=headers) as session:
-        tasks = [_download_single_file(session, url, dest_path, semaphore, locks) for url in urls]
+        tasks = [_download_single_file(session, url, dest_path, semaphore, claimed_names) for url in urls]
         results = await tqdm.gather(*tasks, desc="Downloading Datasets", file=sys.stdout)
         return [r for r in results if r is not None]
 
