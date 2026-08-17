@@ -37,6 +37,17 @@ def _drop_empty_text(df):
         return df
     return df.filter(pl.col("text").is_not_null() & (pl.col("text").str.strip_chars() != ""))
 
+def _read_output(target_path: Path):
+    if target_path.suffix.lower() == ".jsonl":
+        return pl.read_ndjson(target_path)
+    return pl.read_parquet(target_path)
+
+def _write_output(df, target_path: Path, compression: str):
+    if target_path.suffix.lower() == ".jsonl":
+        df.write_ndjson(target_path)
+    else:
+        df.write_parquet(target_path, compression=compression)
+
 def process_file(task):
     file_path_str = task["file"]
     output_file = task["output_file"]
@@ -87,11 +98,11 @@ def process_file(task):
         with FileLock(lock_path, timeout=300):
             if target_path.exists():
                 print(f"Lock acquired. Merging and deduplicating with existing dataset...")
-                df_existing = pl.read_parquet(target_path)
-                
+                df_existing = _read_output(target_path)
+
                 # Align columns diagonally
                 df_combined = pl.concat([df_existing, df_new], how="diagonal")
-                
+
                 # Global deduplication across all writers' data
                 if dedup_columns:
                     valid_dedup_cols = [c for c in dedup_columns if c in df_combined.columns]
@@ -99,11 +110,11 @@ def process_file(task):
                         df_combined = df_combined.unique(subset=valid_dedup_cols, keep="first")
 
                 df_combined = _drop_empty_text(df_combined)
-                df_combined.write_parquet(target_path, compression=compression)
+                _write_output(df_combined, target_path, compression)
             else:
                 print(f"Lock acquired. Creating new dataset...")
                 df_new = _drop_empty_text(df_new)
-                df_new.write_parquet(target_path, compression=compression)
+                _write_output(df_new, target_path, compression)
                 
         return True, None
     except Exception as e:

@@ -1,12 +1,14 @@
 # Dataset Compiler
 
-A desktop tool that pulls dataset files from remote URLs and local folders — CSV, Parquet, JSON, JSONL, and PDF — and compiles them into a single deduplicated Parquet dataset. Runs on Windows, Linux, and macOS.
+A desktop tool that pulls dataset files from remote URLs and local folders — CSV, Parquet, JSON, JSONL, and PDF — and compiles them into a single deduplicated dataset, written as Parquet or JSONL. Runs on Windows, Linux, and macOS.
 
 ## Features
 
 - Download datasets from a list of URLs, or scan local folders/drives recursively
 - Ingests `.csv`, `.parquet`, `.json`, `.jsonl`, and `.pdf` (PDF text is extracted and added as one row per document)
+- Output as `.parquet` (compressed, columnar — best for most training pipelines) or `.jsonl` (plain text lines — easiest to eyeball or stream), picked via the dropdown next to the output path
 - Column renaming and deduplication across all merged files
+- Rows with empty/whitespace-only text are dropped automatically before writing
 - Live progress, ETA, RAM/VRAM monitoring
 - On first launch, asks where to store compiled datasets and downloads — not tied to wherever the app happens to be installed
 - Optional multi-machine cluster mode for large jobs (see below)

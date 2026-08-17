@@ -141,6 +141,17 @@ def _drop_empty_text(df):
         return df
     return df.filter(pl.col("text").is_not_null() & (pl.col("text").str.strip_chars() != ""))
 
+def _read_output(target_path: Path):
+    if target_path.suffix.lower() == ".jsonl":
+        return pl.read_ndjson(target_path)
+    return pl.read_parquet(target_path)
+
+def _write_output(df, target_path: Path, compression: str):
+    if target_path.suffix.lower() == ".jsonl":
+        df.write_ndjson(target_path)
+    else:
+        df.write_parquet(target_path, compression=compression)
+
 
 def process_single_file(file_path: Path, output_file: str, dedup_columns: List[str], column_mapping: Optional[Dict[str, str]], compression: str):
     import polars as pl
@@ -181,19 +192,19 @@ def process_single_file(file_path: Path, output_file: str, dedup_columns: List[s
         
         with FileLock(lock_path, timeout=300):
             if target_path.exists():
-                df_existing = pl.read_parquet(target_path)
+                df_existing = _read_output(target_path)
                 df_combined = pl.concat([df_existing, df_new], how="diagonal")
-                
+
                 if dedup_columns:
                     valid_dedup_cols = [c for c in dedup_columns if c in df_combined.columns]
                     if valid_dedup_cols:
                         df_combined = df_combined.unique(subset=valid_dedup_cols, keep="first")
 
                 df_combined = _drop_empty_text(df_combined)
-                df_combined.write_parquet(target_path, compression=compression)
+                _write_output(df_combined, target_path, compression)
             else:
                 df_new = _drop_empty_text(df_new)
-                df_new.write_parquet(target_path, compression=compression)
+                _write_output(df_new, target_path, compression)
                 
         return f"Successfully processed {file_path.name}"
     except Exception as e:
@@ -250,11 +261,16 @@ class DatasetCompilerApp(ctk.CTk):
         ctk.CTkEntry(self.tab1, textvariable=self.dedup_var).grid(row=3, column=1, padx=10, pady=5, sticky="ew")
 
         # Output File
-        ctk.CTkLabel(self.tab1, text="Output Parquet File:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(self.tab1, text="Output File:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
         default_storage = Path.home() / "DatasetCompiler"
+        self.output_format_var = tk.StringVar(value="parquet")
         self.output_var = tk.StringVar(value=str(default_storage / "consolidated_output" / "train_data.parquet"))
         ctk.CTkEntry(self.tab1, textvariable=self.output_var).grid(row=4, column=1, padx=10, pady=5, sticky="ew")
-        ctk.CTkButton(self.tab1, text="Browse", command=self.browse_output).grid(row=4, column=2, padx=10, pady=5)
+        ctk.CTkOptionMenu(
+            self.tab1, values=["parquet", "jsonl"], variable=self.output_format_var,
+            width=90, command=self.on_output_format_change
+        ).grid(row=4, column=2, padx=(10, 0), pady=5, sticky="w")
+        ctk.CTkButton(self.tab1, text="Browse", command=self.browse_output).grid(row=4, column=3, padx=10, pady=5)
 
         # Temp Download Dir
         ctk.CTkLabel(self.tab1, text="Temp Download Dir:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
@@ -328,10 +344,14 @@ class DatasetCompilerApp(ctk.CTk):
 
     def change_storage_dir(self):
         storage_dir = self.prompt_storage_dir()
-        self.output_var.set(str(storage_dir / "consolidated_output" / "train_data.parquet"))
+        self.output_var.set(str(storage_dir / "consolidated_output" / f"train_data.{self.output_format_var.get()}"))
         self.temp_dir_var.set(str(storage_dir / "raw_data"))
         self.storage_dir_configured = True
         self.save_last_run()
+
+    def on_output_format_change(self, choice):
+        current = Path(self.output_var.get())
+        self.output_var.set(str(current.with_suffix(f".{choice}")))
 
     def load_last_run(self):
         config_path = self.get_config_path()
@@ -350,6 +370,7 @@ class DatasetCompilerApp(ctk.CTk):
                 self.col_map_text.insert("1.0", config.get("col_map", "{\n    \"raw_text\": \"text\",\n    \"content\": \"text\",\n    \"document_id\": \"id\",\n    \"guid\": \"id\"\n}"))
 
                 self.dedup_var.set(config.get("dedup_cols", "text"))
+                self.output_format_var.set(config.get("output_format", "parquet"))
 
                 if "storage_dir" in config:
                     self.output_var.set(config.get("output_file", self.output_var.get()))
@@ -367,6 +388,7 @@ class DatasetCompilerApp(ctk.CTk):
             "local_paths": self.local_paths_text.get("1.0", "end-1c"),
             "col_map": self.col_map_text.get("1.0", "end-1c"),
             "dedup_cols": self.dedup_var.get(),
+            "output_format": self.output_format_var.get(),
             "output_file": self.output_var.get(),
             "temp_dir": self.temp_dir_var.get(),
             "storage_dir": True,
@@ -449,7 +471,9 @@ class DatasetCompilerApp(ctk.CTk):
                     self.local_paths_text.insert("end", file)
 
     def browse_output(self):
-        file = filedialog.asksaveasfilename(defaultextension=".parquet", filetypes=[("Parquet Files", "*.parquet")])
+        fmt = self.output_format_var.get()
+        filetypes = [("Parquet Files", "*.parquet")] if fmt == "parquet" else [("JSONL Files", "*.jsonl")]
+        file = filedialog.asksaveasfilename(defaultextension=f".{fmt}", filetypes=filetypes)
         if file:
             self.output_var.set(file)
 
@@ -479,7 +503,10 @@ class DatasetCompilerApp(ctk.CTk):
             return
 
         dedup_cols = [c.strip() for c in self.dedup_var.get().split(",") if c.strip()]
-        output_file = self.output_var.get()
+        # Output format is determined by the file extension in process_single_file,
+        # so keep it in sync with the dropdown even if the path was typed by hand.
+        output_file = str(Path(self.output_var.get()).with_suffix(f".{self.output_format_var.get()}"))
+        self.output_var.set(output_file)
         download_dir = self.temp_dir_var.get()
 
         if not urls and not local_paths:
@@ -569,7 +596,8 @@ class DatasetCompilerApp(ctk.CTk):
                 out_path = Path(output_file).expanduser().resolve()
                 if out_path.exists():
                     size_mb = out_path.stat().st_size / (1024 * 1024)
-                    row_count = pl.scan_parquet(out_path).select(pl.len()).collect().item()
+                    scan_fn = pl.scan_ndjson if out_path.suffix.lower() == ".jsonl" else pl.scan_parquet
+                    row_count = scan_fn(out_path).select(pl.len()).collect().item()
                     msg = f"Dataset compiled successfully!\nTotal Records: {row_count:,}\nTotal Size: {size_mb:.2f} MB"
                     print(f"\n[REPORT]\n{msg}")
                     self.after(0, lambda: messagebox.showinfo("Success", msg))
